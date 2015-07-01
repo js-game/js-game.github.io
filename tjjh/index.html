@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="description" content="javascript黑白棋人机博弈" />
+	<meta name="keywords" content="黑白棋, Othello, 游戏, 算法, 人工智能, AI, 人机博弈" />
+	<title> javascript黑白棋人机博弈游戏 版本:1.0 </title>
+<style type="text/css">
+body {
+	background: #B4723D;
+}
+#desk {
+	position: absolute;
+	width: 640px;
+	height: 560px;
+	top: 10px;
+	left: 50%;
+	margin-left: -320px;
+}
+#left {
+	float: left;
+	width: 110px;
+	height: 500px;
+}
+#left h1 {
+	margin: 10px 0px;
+	text-align: center;
+	color: black;
+	font: 60px 微软雅黑,黑体,serif;
+	font-weight: bold;
+	text-shadow: 0px 0px 6px #A33D1B, 0px 7px 3px #754B35;
+}
+#left h1 div {
+	color: white;
+}
+.button {
+	margin: 15px 0px;
+	width: 100px;
+	height: 50px;
+	font: 30px/50px 微软雅黑,黑体,serif;
+	color: #300;
+	background: #dd8e4f;
+	border: 1px solid #ff6600;
+	border-radius: 25px;
+	box-shadow: 0px 4px 10px #482915;
+	text-align: center;
+	cursor: default;
+}
+.button:hover {
+	background: #E4A774;
+	border: 1px solid #ff3300;
+	box-shadow: 0px 6px 10px #482915;
+}
+.button:active {
+	color: #600;
+	background: #eec7a6;
+	border: 1px solid #ff0000;
+	box-shadow: 0px 2px 5px #482915;
+	position: relative;
+	top: 2px;
+}
+.cbox {
+	border: 3px solid #B4723D;
+	border-radius: 10px;
+	width: 100px;
+	height: 56px;
+}
+.side {
+	border: 3px solid #cc3333;
+}
+.cbox span {
+	float: right;
+	font: 30px/54px 微软雅黑,黑体,serif;
+	padding-right: 7px;
+
+}
+#chessboard {
+	float: left;
+	border: 2px solid #CA521E;
+	width: 522px;
+	height: 522px;
+	box-shadow: 5px 5px 15px #482915;
+}
+#chessboard table {
+	background: #835f2e;
+	border-spacing: 2px;
+	border: 20px solid #460e00;
+}
+#chessboard td {
+	width: 54px;
+	height: 54px;
+	border: 1px solid #e4c8a9;
+}
+#chessboard td:hover {
+	border: 1px solid #f00;
+}
+#chessboard .bg0 { background: #c1914f; }
+#chessboard .bg1 { background: #cba470; }
+.black, .white {
+	width: 10px;
+	height: 10px;
+	border-radius: 25px;
+	margin: 5px;
+	padding: 17px;
+	box-shadow: 0px 4px 10px #482915;
+}
+.black {
+	background: black;
+}
+.white {
+	background: white;
+}
+.newest:before, .reversal:before {
+	content: "";
+	display: block;
+	width: 10px;
+	height: 10px;
+	border-radius: 5px;
+}
+.newest:before {
+	background: #f00;
+}
+.reversal:before {
+	background: #999;
+}
+.prompt {
+	width: 10px;
+	height: 10px;
+	border-radius: 5px;
+	margin: 22px;
+	padding: 0px;
+	background: #ff0;
+}
+#selectbox {
+	position: absolute;
+	left: 100px;
+	top: 60px;
+	width: 380px;
+	height: 420px;
+	background: #DBA977;
+	border: 5px solid #98472C;
+	border-radius: 25px;
+	box-shadow: 5px 5px 15px #482915;
+	padding: 0px 30px;
+	color: #472E25;
+	font: 28px/50px 微软雅黑,黑体,serif;
+	display: none;
+}
+#buttons {
+	margin: 0px 50px;
+}
+#buttons div {
+	float: left;
+	margin: 0px 10px;
+}
+#copyright {
+	clear: left;
+	text-align: center;
+	color: #822B00;
+	padding-top: 10px;
+}
+</style>
+</head>
+<body>
+<div id="desk">
+	<div id="left">
+		<h1>黑<div>白</div>棋</h1>
+		<div id="side1" class="cbox">
+			<span>0</span><div class="black"></div>
+		</div>
+		<div id="side2" class="cbox">
+			<span>0</span><div class="white"></div>
+		</div>
+		<div id="back" class="button">悔棋</div>
+		<div id="play" class="button">开始</div>
+	</div>
+	<div id="chessboard"></div>
+	<div id="copyright">Copyright © 2015, jslang, All Rights Reserved</div>
+	<div id="selectbox">
+		<label><input type="radio" name="side" checked="checked">玩家先走</label>
+		<label><input type="radio" name="side">电脑先走</label><br />
+		<label><input type="radio" name="level">难度级别一 每次计算 0.05秒</label><br />
+		<label><input type="radio" name="level">难度级别二 每次计算 0.2 秒</label><br />
+		<label><input type="radio" name="level" checked="checked">难度级别三 每次计算 1 秒</label><br />
+		<label><input type="radio" name="level">难度级别四 每次计算 4 秒</label><br />
+		<label><input type="radio" name="level">难度级别五 每次计算 10 秒</label><br />
+		<label><input type="radio" name="level">难度级别六 每次计算 20 秒</label><br />
+		<div id="buttons">
+			<div id="ok" class="button">确定</div>
+			<div id="cancel" class="button">取消</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="ocjs.min.js"></script>
+</body>
+</html>
