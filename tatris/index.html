@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+<title>俄罗斯方块Ver:1.3 Author:jslang</title>
+<style type="text/css">
+body { color:#dbdbdb; background:#000; font:25px/25px 宋体; }
+#box { position:absolute; left:50%; top:10px; margin-left:-220px; width:252px;border:#999 20px ridge; }
+#info {	position:absolute; left:50%; top:30px; margin-left:90px; }
+#next { padding:8px;width:105px; }
+#rend { padding-top:30px; font:16px/25px 宋体; }
+#rend span { color:#ffff00; }
+.c0 .color { color:#ff9999;text-shadow:2px 3px 1px #ff0000,0px 0px 4px #ffffff; }
+.c1 .color { color:#ffcc99;text-shadow:2px 3px 1px #ff9900,0px 0px 4px #ffffff; }
+.c2 .color { color:#ffff99;text-shadow:2px 3px 1px #cccc00,0px 0px 4px #ffffff; }
+.c3 .color { color:#99ff99;text-shadow:2px 3px 1px #00ff00,0px 0px 4px #ffffff; }
+.c4 .color { color:#99ffff;text-shadow:2px 3px 1px #00cccc,0px 0px 4px #ffffff; }
+.c5 .color { color:#9999ff;text-shadow:2px 3px 1px #0000ff,0px 0px 4px #ffffff; }
+.c6 .color { color:#ff99ff;text-shadow:2px 3px 1px #cc00cc,0px 0px 4px #ffffff; }
+</style>
+</head>
+<body class="c0">
+<div id="box" class="color"></div>
+<div id="info">
+	NEXT:<div id="next" class="color"></div>
+	<div id="text"></div>
+	<div id="rend">
+		<span>←↓→</span>：控制方向<br />
+		<span>Z X ↑</span>：改变形状<br />
+		<span>Shift</span> ：一键到底<br />
+		<span>空格键</span>：暂停<br /><br />
+		Author: <span>jslang</span><br />
+		Ver: <span>1.3</span>
+	</div>
+</div>
+<script type="text/javascript">
+var map=eval("["+Array(23).join("0x801,")+"0xfff]");
+var tatris=[[0x6600],[0x2222,0xf00],[0xc600,0x2640],[0x6c00,0x4620],[0x4460,0x2e0,0x6220,0x740],[0x2260,0xe20,0x6440,0x4700],[0x2620,0x720,0x2320,0x2700]];
+var char={x:"\u3000",s:"\u25a0",t:"\u25a1"};
+var downkey={}, retkey={"40":3,"37":6,"39":6},  keycom={"38":"rotate(1)","90":"rotate(1)","88":"rotate(3)","40":"down()","16":"fastdown()","37":"move(1)","39":"move(-1)","32":"0;pause=!pause"};
+var dia, pos, bak, run, next, pause=false, info={speed:1,lines:0,score:0};
+function start(){
+	dia=next.d;
+	bak=pos={fk:[],y:0,x:4,s:next.s};
+	nextdia();
+	document.getElementById("next").innerHTML=(next.d[next.s%next.d.length]|0x10000).toString(2).slice(-16).replace(/..../g,"$&<br/>").replace(/1/g,char.t).replace(/0/g,char.x);
+ 	document.getElementById("text").innerHTML="SCORE:"+info.score+"<br/><br/>LINES:"+info.lines+"<br/><br/>SPEED:"+info.speed;
+	rotate(0);
+	run=setInterval("pause||down()",~~(Math.pow(1.3,12-info.speed)*30+20));
+}
+function over(){
+	clearInterval(kTime);
+	alert("GAME OVER");
+}
+function nextdia(){
+	next={d:tatris[~~(Math.random()*7)],s:~~(Math.random()*4)};
+}
+function update(t){
+	t&&(pos=bak);
+	bak={fk:pos.fk.slice(0),y:pos.y,x:pos.x,s:pos.s};
+	if(t)
+		return;
+	for(var i=0,a2=""; i<22; i++)
+		a2+=map[i].toString(2).slice(1,-1)+"<br/>";
+	for(var i=0,n; i<4; i++)
+		if(/([^0]+)/.test(bak.fk[i].toString(2).replace(/1/g,char.t)))
+			a2=a2.substr(0,n=(bak.y+i+1)*15-RegExp.$_.length-4)+RegExp.$1+a2.slice(n+RegExp.$1.length);
+	document.getElementById("box").innerHTML=a2.replace(/1/g,char.s).replace(/0/g,char.x);
+}
+function is(){
+	for(var i=0; i<4; i++)
+		if((pos.fk[i]&map[pos.y+i])!=0)
+			return true;
+}
+function rotate(r){
+	pos.s=(pos.s+r)%dia.length;
+	var f=dia[pos.s];
+	for(var i=0; i<4; i++)
+		pos.fk[i]=(f>>(12-i*4)&15)<<pos.x;
+	update(is()&&ert(1)&&ert(-2)&&ert(-1));
+}
+function down(){
+	++pos.y;
+	if(is()){
+		pos=bak;
+		for(var i=0, r=0; i<4 && pos.y+i<22; i++)
+			if((map[pos.y+i]|=pos.fk[i])==0xfff){
+				map.splice(pos.y+i,1);
+				map.unshift(0x801);
+				r++;
+				if(++info.lines%20==0)
+					document.body.className="c"+info.speed++%7;
+			}
+		clearInterval(run);
+		if(map[1]!=0x801) return over();
+		info.score+=~~(Math.pow(r,1.8)*10)+2;
+		start();
+	}
+	update();
+}
+function fastdown(){
+	clearInterval(run);
+	run=setInterval("pause||down()",12);
+}
+function move(k){
+	update(ert(k));
+}
+function ert(k){
+	pos.x+=k;
+	for(var i=0; i<4; i++)
+		k>0 ? pos.fk[i]<<=k : pos.fk[i]>>=-k;
+	return is();
+}
+document.onkeydown=function(e){
+	var k=(e||event).keyCode;
+	if(keycom[k] && !(k in downkey))
+		downkey[k]=0;
+};
+document.onkeyup=function(e){
+	var k=(e||event).keyCode;
+	if(keycom[k])
+		delete downkey[k];
+};
+var kTime = setInterval(function(){
+	for(var k in downkey)
+		if(++downkey[k]==1 || retkey[k] && downkey[k]>retkey[k])
+			eval("pause||"+keycom[k]);
+},25);
+nextdia();
+start();
+</script>
+</body>
+</html>
