@@ -20,7 +20,7 @@ h1 {
 	background-color: #FFFFcc;
 }
 
-#clear {
+.button {
 	width: 100px;
 	height: 40px;
 }
@@ -29,7 +29,8 @@ h1 {
 <body>
 <h1>手写毛笔字效果-手机版</h1>
 <canvas id="canvasId" width="400" height="400"></canvas><br />
-<input type="button" value="clear" id="clear" onclick="hw.clear();" />
+<input type="button" value="全部清除" class="button" onclick="hw.clear();" />
+<input type="button" value="清除最后一笔" class="button" onclick="hw.historyBack();" />
 <script type="text/javascript">
 function Handwriting(id) {
 	this.canvas = document.getElementById(id);
@@ -52,15 +53,31 @@ function Handwriting(id) {
 	this.lineMin = 3;
 	this.linePressure = 1;
 	this.smoothness = 80;
+	this.history = [];
 }
 
 Handwriting.prototype.clear = function () {
+	this.history = [];
 	this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+}
+
+Handwriting.prototype.historyBack = function () {
+	this.history.pop();
+	this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+	for (var i = 0; i < this.history.length; i++) {
+		var h = this.history[i];
+		for (var j = 0; j < h.length; j+=3) {
+			this.ctx.beginPath();
+			this.ctx.arc(h[j],h[j+1],h[j+2],0,2*Math.PI,true);
+			this.ctx.fill();
+		}
+	}
 }
 
 Handwriting.prototype.downEvent = function (e) {
 	this.moveFlag = true;
 	this.has = [];
+	this.history.push([]);
 	this.upof = this.getXY(e);
 	this.startOf = this.upof;
 }
@@ -99,6 +116,7 @@ Handwriting.prototype.moveEvent = function (e) {
 		this.ctx.beginPath();
 		this.ctx.arc(x,y,r,0,2*Math.PI,true);
 		this.ctx.fill();
+		this.history[this.history.length-1].push(x,y,r);
 	}
 }
 
