@@ -45,7 +45,7 @@ function Chessboard()
 		pieces = obj.getElementsByTagName("div");
 		bindEvent(obj.getElementsByTagName("td"));
 
-		piecesnum = document.getElementById("right").getElementsByTagName("span");
+		piecesnum = document.getElementById("console").getElementsByTagName("span");
 		side = {
 			"1": document.getElementById("side1"),
 			"-1": document.getElementById("side2")
@@ -407,16 +407,23 @@ function Othello()
 
 	var map = [];			//棋局数组
 	var history = [];		//历史记录,用于悔棋操作
-	var aiRuning = false;	//AI运算中...
 
 	var zobrist = new Zobrist();
 
 	oo.aiSide = 0;	//1: 电脑为黑棋,  -1: 电脑为白棋,  0: 双人对战 2: 电脑自己对战
 
+
+	var aiRuning = false;	//AI运算中...
+	var aiRuningObj = document.getElementById("airuning");
+	var passObj = document.getElementById("pass");
+
+	var timer;		//定时器id
+
 	oo.play = function ()	//开始新棋局
 	{
 		if (aiRuning)
 			return;
+		clearTimeout(timer);
 		console.clear();
 		//console.time("计时器1");
 		map = [];
@@ -446,24 +453,32 @@ function Othello()
 	{
 		var aiAuto = oo.aiSide==map.side || oo.aiSide==2;
 		oo.findLocation(map);
+		setAIRunStatus(false);
+		setPassStatus(false);
 		board.update(map,aiAuto);
 		// console.log(map.nextIndex)
 
 		if (map.space==0 || map.nextNum==0 && map.prevNum==0)		//棋盘子满 或 双方都无棋可走
 		{
-			setTimeout(gameOver, 300);
+			timer = setTimeout(gameOver, 450);
 			return;
 		}
 		if (map.nextNum==0)	//无棋可走pass
 		{
-			oo.pass(map);
-			setTimeout(update, 300);
+			timer = setTimeout(function() {
+				oo.pass(map);
+				update();
+				setPassStatus(true);
+			}, 450);
 			return;
 		}
 		if (aiAuto)
 		{
 			aiRuning = true;
-			setTimeout(aiRun, 300);
+			timer = setTimeout(function () {
+				setAIRunStatus(true);
+				timer = setTimeout(aiRun, 50);
+			}, 400);
 		}
 	}
 
@@ -481,7 +496,8 @@ function Othello()
 	function gameOver()
 	{
 		// console.timeEnd("计时器1");
-
+		setAIRunStatus(false);
+		setPassStatus(false);
 		alert("棋局结束\n\n黑棋: "+map.black+" 子\n白棋: "+map.white+" 子\n\n"+(map.black==map.white?"平局!!!":map.black>map.white?"黑棋胜利!!!":"白棋胜利!!!"));
 	}
 
@@ -600,8 +616,21 @@ function Othello()
 	{
 		if (aiRuning || history.length==0)
 			return;
+		clearTimeout(timer);
 		map = history.pop();
 		update();
+	}
+
+	function setAIRunStatus(t)		//设置AI运算状态
+	{
+		aiRuningObj.style.display = t?"block":"none";
+	}
+
+	function setPassStatus(t)		//设置pass状态
+	{
+		passObj.style.display = t?"block":"none";
+		if(t)
+			passObj.innerHTML = map.side==1?"白方无棋可下，黑方继续下子":"黑方无棋可下，白方继续下子";
 	}
 
 }
@@ -639,7 +668,7 @@ document.getElementById("explain").onclick = function() {
 	alert("               黑白棋游戏说明\n【简介】\n黑白棋又叫反棋(Reversi)、奥赛罗棋(Othello)、苹果棋或翻转棋。游戏通过相互翻转对方的棋子，最后以棋盘上谁的棋子多来判断胜负。\n【规则】\n1．黑方先行，双方交替下棋。\n2．新落下的棋子与棋盘上已有的同色棋子间，对方被夹住的所有棋子都要翻转过来。可以是横着夹，竖着夹，或是斜着夹。夹住的位置上必须全部是对手的棋子，不能有空格。\n3．新落下的棋子必须翻转对手一个或多个棋子，否则就不能落子。\n4．如果一方没有合法棋步，也就是说不管他下到哪里，都不能至少翻转对手的一个棋子，那他这一轮只能弃权，而由他的对手继续落子直到他有合法棋步可下。\n5．如果一方至少有一步合法棋步可下，他就必须落子，不得弃权。\n6．当棋盘填满或者双方都无合法棋步可下时，游戏结束。结束时谁的棋子最多谁就是赢家。\n\nPS: 本游戏最好用Chrome浏览器远行，以达到最高棋力。\n");
 };
 
-document.getElementById("2d3d").onclick = function() {
+document.getElementById("no3d").onclick = function() {
 	var desk = document.getElementById("desk");
 	desk.className = desk.className=="fdd"?"":"fdd";
 	this.innerHTML = desk.className=="fdd"?"2D":"3D";
